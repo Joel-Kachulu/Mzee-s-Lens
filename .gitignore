@@ -1,0 +1,37 @@
+# Node modules
+client/node_modules/
+server/node_modules/
+
+# Build output
+client/dist/
+server/dist/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Vite cache
+client/.vite/
+
+# Environment variables
+.env
+.env.*.local
+
+# Misc
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Uploads (optional: adjust depending on usage)
+server/uploads/

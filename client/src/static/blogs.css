@@ -1,0 +1,28 @@
+/* src/static/blogs.css */
+.dark-theme {
+    background-color: #121212;
+    color: #ffffff;
+    min-height: 100vh;
+  }
+  
+  .lead {
+    opacity: 0.8;
+  }
+  
+  .card {
+    transition: transform 0.3s ease;
+  }
+  
+  .card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .btn-outline-primary {
+    transition: background-color 0.3s ease;
+  }
+  
+  .btn-outline-primary:hover {
+    background-color: #0d6efd;
+    color: #fff;
+  }
+  

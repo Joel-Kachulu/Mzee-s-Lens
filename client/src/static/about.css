@@ -1,0 +1,29 @@
+/* static/about.css */
+.dark-theme {
+    background-color: #121212;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .bg-white {
+    background-color: #ffffff;
+  }
+  
+  .text-secondary {
+    color: #6c757d;
+  }
+  
+  ul.list-unstyled li {
+    font-size: 1.1rem;
+  }
+  
+  .fade-in {
+    animation: fadeInAnimation 1s ease-in forwards;
+  }
+  
+  @keyframes fadeInAnimation {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  

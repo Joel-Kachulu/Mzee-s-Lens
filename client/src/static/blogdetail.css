@@ -1,0 +1,24 @@
+/* Custom 15% viewport width padding */
+.px-15vw {
+    padding-left: 15vw;
+    padding-right: 15vw;
+  }
+  
+  @media (max-width: 992px) {
+    .px-15vw {
+      padding-left: 5vw;
+      padding-right: 5vw;
+    }
+  }
+  
+  /* Full-width content styling */
+  .blog-post {
+    max-width: 100%;
+  }
+  
+  /* Image styling */
+  .img-fluid.rounded-0 {
+    border-radius: 0 !important;
+  }
+
+  

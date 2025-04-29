@@ -1,0 +1,89 @@
+/* Top Bar Styles */
+.top-bar {
+    background-color: #121212;
+    padding: 1rem 0;
+    border-bottom: 1px solid #333;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+  
+  .top-bar-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .logo-container {
+    display: flex;
+    align-items: center;
+  }
+  
+  .logo-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: white;
+    font-weight: 700;
+    font-size: 1.5rem;
+  }
+  
+  .lens-icon {
+    margin-right: 10px;
+    font-size: 1.8rem;
+    color: #4dabf7;
+  }
+  
+  .search-container {
+    flex-grow: 1;
+    max-width: 500px;
+    margin: 0 2rem;
+  }
+  
+  .search-input {
+    position: relative;
+  }
+  
+  .search-input input {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    padding-right: 2.5rem;
+    border-radius: 20px;
+    border: none;
+    background-color: #2d2d2d;
+    color: white;
+  }
+  
+  .search-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #bbbbbb;
+  }
+  
+  .social-links {
+    display: flex;
+    gap: 1.5rem;
+  }
+  
+  .social-icon {
+    color: white;
+    font-size: 1.5rem;
+    transition: color 0.3s ease;
+  }
+  
+  .social-icon:hover {
+    color: #4dabf7;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .search-container {
+      display: none;
+    }
+    
+    .top-bar-content {
+      justify-content: space-between;
+    }
+  }

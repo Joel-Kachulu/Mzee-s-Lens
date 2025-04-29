@@ -1,0 +1,39 @@
+/* Dark Theme Styles */
+.dark-theme {
+    background-color: #121212;
+    min-height: 100vh;
+    color: #ffffff;
+  }
+  
+  .header-dark {
+    padding: 2rem 0;
+    border-bottom: 1px solid #333;
+  }
+  
+  .nav-dark .text-decoration-none {
+    color: #bbbbbb;
+    transition: color 0.3s ease;
+  }
+  
+  .nav-dark .text-decoration-none:hover {
+    color: #ffffff;
+    text-decoration: underline;
+  }
+  
+  /* About Card Styles */
+  .about-card-dark {
+    background-color: #1e1e1e !important;
+    border: 1px solid #333 !important;
+    color: #e0e0e0 !important;
+  }
+  
+  .read-more-dark {
+    color: #4dabf7 !important;
+  }
+  
+  /* Light Theme Section for Posts */
+  .light-theme-section {
+    background-color: #ffffff;
+    color: #333333;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  }
