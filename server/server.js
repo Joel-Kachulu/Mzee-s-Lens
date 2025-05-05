@@ -42,7 +42,7 @@ app.use(helmet({
 }));
 app.use(compression());
 app.use(cors({
-  origin: 'https://mzee-s-lens-2jdw.vercel.app',
+  origin: 'https://mzee-s-lens-2jdw.vercel.app/',
   credentials: true,
   exposedHeaders: ['Authorization']
 }));
@@ -109,6 +109,8 @@ app.post('/api/upload-image', upload.single('image'), async (req, res) => {
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+const imageUrl = `${process.env.REACT_APP_API_URL}/uploads/${filename}`;
+
 
 // AdminJS setup with enhanced blog editing
 const admin = new AdminJS({
