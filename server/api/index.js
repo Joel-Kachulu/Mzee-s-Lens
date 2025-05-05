@@ -226,7 +226,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
 
 // ✅ For Vercel deployment
-export const handler = serverless(app);
+export default serverless(app);
 
 // ✅ For local development
 if (process.env.NODE_ENV !== 'production') {
