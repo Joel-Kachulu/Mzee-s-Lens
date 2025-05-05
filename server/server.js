@@ -12,6 +12,7 @@ import compression from 'compression';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
+import { ComponentLoader } from 'adminjs'
 
 // Models
 import Blog from './models/Blog.js';
@@ -104,7 +105,9 @@ app.post('/api/upload-image', upload.single('image'), async (req, res) => {
 });
 
 // AdminJS Custom Component
-const imageUploadComponent = path.join('components', 'ImageUpload.js');
+const componentLoader = new ComponentLoader()
+const imageUploadComponent = componentLoader.add('ImageUpload', path.join(__dirname, 'components', 'ImageUpload.jsx'))
+
 
 
 // AdminJS Setup
@@ -130,8 +133,8 @@ const admin = new AdminJS({
           coverImage: {
             type: 'string',
             components: {
-              edit: imageUploadComponent,
-              show: imageUploadComponent,
+              edit: '',
+              show: ''
             },
             isVisible: {
               list: true,
@@ -183,6 +186,7 @@ const admin = new AdminJS({
       },
     },
   },
+  componentLoader, 
   rootPath: '/admin',
   dashboard: {
     handler: async () => {
