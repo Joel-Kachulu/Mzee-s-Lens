@@ -225,5 +225,14 @@ app.use(admin.options.rootPath, adminRouter);
 app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
 
-// Export handler for Vercel
+// ✅ For Vercel deployment
 export const handler = serverless(app);
+
+// ✅ For local development
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Admin panel: http://localhost:${PORT}/admin`);
+  });
+}
