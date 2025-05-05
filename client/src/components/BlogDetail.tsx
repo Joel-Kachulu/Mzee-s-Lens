@@ -22,7 +22,7 @@ const BlogDetail: React.FC = () => {
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        const response = await api.get(`/blogs/view/${id}`);
+        const response = await api.get(`/api/blogs/view/${id}`);
         setBlog(response.data);
       } catch (error) {
         setError('Failed to load blog post. Please try again later.');
