@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@adminjs/bundler@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@adminjs/bundler/-/bundler-3.0.0.tgz#c0a817fae3443feb1ee670540aa878479822e3a0"
+  integrity sha512-s8ItuELPQEXDIEI2jc5TB2iA1jGtNOdZrWrweJvIeE20ORE50m1Ws6uS+bLsAuZCGh6dHOxCWOKFZ/wDQg4TKg==
+
 "@adminjs/design-system@^4.1.0":
   version "4.1.1"
   resolved "https://registry.yarnpkg.com/@adminjs/design-system/-/design-system-4.1.1.tgz#47e9834e9b848cda0e802834b7ff2bf11f7d73a1"

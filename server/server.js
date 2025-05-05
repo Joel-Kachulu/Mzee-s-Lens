@@ -1,3 +1,4 @@
+// index.js
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
@@ -11,8 +12,6 @@ import compression from 'compression';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
-import { v4 as uuidv4 } from 'uuid';
-import { ComponentLoader } from 'adminjs';
 
 // Models
 import Blog from './models/Blog.js';
@@ -26,7 +25,10 @@ import blogRoutes from './routes/blogs.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Setup env
 dotenv.config();
+
+// Register AdminJS Mongoose adapter
 AdminJS.registerAdapter({
   Resource: AdminJSMongoose.Resource,
   Database: AdminJSMongoose.Database,
@@ -34,6 +36,7 @@ AdminJS.registerAdapter({
 
 const app = express();
 
+// Middleware
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(compression());
 app.use(cors({
@@ -43,6 +46,9 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
 
@@ -51,22 +57,23 @@ mongoose.connect(process.env.MONGO_URI, {
   serverSelectionTimeoutMS: 5000,
   socketTimeoutMS: 45000
 })
-.then(() => {
-  console.log('MongoDB connected');
-  createInitialAdmin();
-})
-.catch(err => console.error('MongoDB connection error:', err));
+  .then(() => {
+    console.log('✅ MongoDB connected');
+    createInitialAdmin();
+  })
+  .catch(err => console.error('❌ MongoDB connection error:', err));
 
+// Create default admin
 const createInitialAdmin = async () => {
   const exists = await Admin.findOne();
   if (!exists) {
     const hashedPassword = await bcrypt.hash('admin123', 10);
     await Admin.create({ username: 'admin', password: hashedPassword });
-    console.log('Initial admin created - username: admin, password: admin123');
+    console.log('✅ Initial admin created - username: admin, password: admin123');
   }
 };
 
-// Image upload API
+// Image Upload API
 const upload = multer({ dest: 'uploads/' });
 
 app.post('/api/upload-image', upload.single('image'), async (req, res) => {
@@ -91,18 +98,16 @@ app.post('/api/upload-image', upload.single('image'), async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Image upload error:', error);
+    console.error('❌ Image upload error:', error);
     res.status(500).json({ success: 0, error: 'Upload failed' });
   }
 });
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// AdminJS Custom Component
+const imageUploadComponent = path.join('components', 'ImageUpload.js');
 
-// Register AdminJS components properly
-const componentLoader = new ComponentLoader();
-const imageUploadComponent = componentLoader.add('ImageUpload', path.join(__dirname, 'components', 'ImageUpload.jsx'));
 
-// AdminJS config
+// AdminJS Setup
 const admin = new AdminJS({
   resources: [
     {
@@ -135,12 +140,8 @@ const admin = new AdminJS({
               show: true,
             },
           },
-          createdAt: {
-            isVisible: { edit: false },
-          },
-          updatedAt: {
-            isVisible: { edit: false },
-          },
+          createdAt: { isVisible: { edit: false } },
+          updatedAt: { isVisible: { edit: false } },
         },
         actions: {
           new: {
@@ -148,8 +149,7 @@ const admin = new AdminJS({
               if (request.payload?.title) {
                 request.payload.slug = request.payload.title
                   .toLowerCase()
-                  .replace(/[^a-z0-9]/g, '-')
-                  .replace(/-+/g, '-')
+                  .replace(/[^a-z0-9]+/g, '-')
                   .replace(/^-|-$/g, '');
               }
               return request;
@@ -160,8 +160,7 @@ const admin = new AdminJS({
               if (request.payload?.title) {
                 request.payload.slug = request.payload.title
                   .toLowerCase()
-                  .replace(/[^a-z0-9]/g, '-')
-                  .replace(/-+/g, '-')
+                  .replace(/[^a-z0-9]+/g, '-')
                   .replace(/^-|-$/g, '');
               }
               return request;
@@ -190,13 +189,13 @@ const admin = new AdminJS({
       const blogCount = await Blog.countDocuments();
       return {
         message: 'Welcome to Admin Dashboard',
-        blogCount: blogCount,
+        blogCount,
       };
     },
   },
-  componentLoader, // Register component loader
 });
 
+// AdminJS Auth + Router
 const adminRouter = AdminJSExpress.buildAuthenticatedRouter(
   admin,
   {
@@ -225,9 +224,10 @@ const adminRouter = AdminJSExpress.buildAuthenticatedRouter(
 
 app.use(admin.options.rootPath, adminRouter);
 
+// Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Admin panel: http://localhost:${PORT}/admin`);
-  console.log('Test credentials: admin/admin123');
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🛠 Admin panel: http://localhost:${PORT}/admin`);
+  console.log(`👤 Test credentials: admin / admin123`);
 });
