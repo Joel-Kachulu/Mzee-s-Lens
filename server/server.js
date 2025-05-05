@@ -8,12 +8,11 @@ import * as AdminJSMongoose from '@adminjs/mongoose';
 import bcrypt from 'bcryptjs';
 import helmet from 'helmet';
 import compression from 'compression';
-import jwt from 'jsonwebtoken';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
-import ImageUpload from './components/ImageUpload.js';
+import { ComponentLoader } from 'adminjs';
 
 // Models
 import Blog from './models/Blog.js';
@@ -24,27 +23,23 @@ import File from './models/File.js';
 import authRoutes from './routes/auth.js';
 import blogRoutes from './routes/blogs.js';
 
-// Fix __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config();
 AdminJS.registerAdapter({
   Resource: AdminJSMongoose.Resource,
-  Database: AdminJSMongoose.Database
+  Database: AdminJSMongoose.Database,
 });
 
 const app = express();
 
-// Middlewares
-app.use(helmet({
-  contentSecurityPolicy: false // Temporarily disable for AdminJS assets
-}));
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(compression());
 app.use(cors({
-  origin: 'https://mzee-s-lens-2jdw.vercel.app/',
+  origin: 'https://mzee-s-lens-2jdw.vercel.app',
   credentials: true,
-  exposedHeaders: ['Authorization']
+  exposedHeaders: ['Authorization'],
 }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -62,7 +57,6 @@ mongoose.connect(process.env.MONGO_URI, {
 })
 .catch(err => console.error('MongoDB connection error:', err));
 
-// Create initial admin if none exists
 const createInitialAdmin = async () => {
   const exists = await Admin.findOne();
   if (!exists) {
@@ -72,22 +66,18 @@ const createInitialAdmin = async () => {
   }
 };
 
-// Configure multer for file uploads
+// Image upload API
 const upload = multer({ dest: 'uploads/' });
 
-// Add file upload endpoint for EditorJS
 app.post('/api/upload-image', upload.single('image'), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ success: 0, error: 'No file uploaded' });
-    }
+    if (!req.file) return res.status(400).json({ success: 0, error: 'No file uploaded' });
 
-    // Create a file record in MongoDB
     const file = new File({
       filename: req.file.originalname,
       url: `/uploads/${req.file.filename}`,
       size: req.file.size,
-      mimetype: req.file.mimetype
+      mimetype: req.file.mimetype,
     });
 
     await file.save();
@@ -96,7 +86,6 @@ app.post('/api/upload-image', upload.single('image'), async (req, res) => {
       success: 1,
       file: {
         url: `/uploads/${req.file.filename}`,
-        // Include additional info if needed by your frontend
         publicId: file._id,
         name: req.file.originalname
       }
@@ -107,12 +96,13 @@ app.post('/api/upload-image', upload.single('image'), async (req, res) => {
   }
 });
 
-// Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-const imageUrl = `${process.env.REACT_APP_API_URL}/uploads/${filename}`;
 
+// Register AdminJS components properly
+const componentLoader = new ComponentLoader();
+const imageUploadComponent = componentLoader.add('ImageUpload', path.join(__dirname, 'components', 'ImageUpload.jsx'));
 
-// AdminJS setup with enhanced blog editing
+// AdminJS config
 const admin = new AdminJS({
   resources: [
     {
@@ -121,7 +111,7 @@ const admin = new AdminJS({
         properties: {
           title: { isTitle: true },
           slug: {
-            isVisible: { list: true, show: true, edit: false }
+            isVisible: { list: true, show: true, edit: false },
           },
           content: {
             type: 'richtext',
@@ -129,28 +119,28 @@ const admin = new AdminJS({
               list: false,
               edit: true,
               filter: false,
-              show: true
-            }
+              show: true,
+            },
           },
           coverImage: {
             type: 'string',
             components: {
-              edit: ImageUpload, 
-              show: ImageUpload
+              edit: imageUploadComponent,
+              show: imageUploadComponent,
             },
             isVisible: {
               list: true,
               edit: true,
               filter: false,
-              show: true
-            }
+              show: true,
+            },
           },
           createdAt: {
-            isVisible: { edit: false }
+            isVisible: { edit: false },
           },
           updatedAt: {
-            isVisible: { edit: false }
-          }
+            isVisible: { edit: false },
+          },
         },
         actions: {
           new: {
@@ -163,7 +153,7 @@ const admin = new AdminJS({
                   .replace(/^-|-$/g, '');
               }
               return request;
-            }
+            },
           },
           edit: {
             before: async (request) => {
@@ -175,12 +165,12 @@ const admin = new AdminJS({
                   .replace(/^-|-$/g, '');
               }
               return request;
-            }
-          }
-        }
-      }
+            },
+          },
+        },
+      },
     },
-    Admin
+    Admin,
   ],
   branding: {
     companyName: 'Mzee Blog Site',
@@ -190,45 +180,35 @@ const admin = new AdminJS({
         primary100: '#3498db',
         primary80: '#5faee3',
         primary60: '#8bc4ea',
-        primary40: '#b7d9f1'
-      }
-    }
+        primary40: '#b7d9f1',
+      },
+    },
   },
   rootPath: '/admin',
   dashboard: {
     handler: async () => {
       const blogCount = await Blog.countDocuments();
-      return { 
+      return {
         message: 'Welcome to Admin Dashboard',
-        blogCount: blogCount
-      }
-    }
-  }
+        blogCount: blogCount,
+      };
+    },
+  },
+  componentLoader, // Register component loader
 });
 
-// AdminJS router
 const adminRouter = AdminJSExpress.buildAuthenticatedRouter(
   admin,
   {
     authenticate: async (email, password) => {
-      try {
-        const admin = await Admin.findOne({ username: email }).select('+password');
-        if (!admin) return null;
-        
-        const isMatch = await bcrypt.compare(password, admin.password);
-        if (!isMatch) return null;
-        
-        return {
-          email: admin.username,
-          title: admin.username
-        };
-      } catch (error) {
-        console.error('AdminJS auth error:', error);
-        return null;
-      }
+      const admin = await Admin.findOne({ username: email }).select('+password');
+      if (!admin) return null;
+
+      const isMatch = await bcrypt.compare(password, admin.password);
+      return isMatch ? { email: admin.username } : null;
     },
     cookieName: 'adminjs',
-    cookiePassword: process.env.COOKIE_SECRET || 'default-strong-secret-32-characters'
+    cookiePassword: process.env.COOKIE_SECRET || 'default-strong-secret-32-characters',
   },
   null,
   {
@@ -238,24 +218,16 @@ const adminRouter = AdminJSExpress.buildAuthenticatedRouter(
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax'
-    }
+      sameSite: 'lax',
+    },
   }
 );
 
-// Mount AdminJS before other routes
 app.use(admin.options.rootPath, adminRouter);
-
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/blogs', blogRoutes);
-
-// Serve AdminJS assets
-app.use(express.static(path.join(__dirname, 'node_modules', 'adminjs', 'public')));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Admin panel: http://localhost:${PORT}/admin`);
-  console.log(`Test credentials: admin/admin123`);
+  console.log('Test credentials: admin/admin123');
 });

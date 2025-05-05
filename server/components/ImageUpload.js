@@ -23,7 +23,7 @@ const ImageUpload = (props) => {
     formData.append('image', file);
 
     try {
-      const response = await fetch('/api/upload-image', {
+      const response = await fetch('https://mzee-s-lens.onrender.com/api/upload-image', {
         method: 'POST',
         body: formData,
       });
