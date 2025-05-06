@@ -12,7 +12,9 @@ import compression from 'compression';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
-import { ComponentLoader } from 'adminjs'
+import { ComponentLoader } from 'adminjs';
+import session from 'express-session';
+import MongoStore from 'connect-mongo';
 
 // Models
 import Blog from './models/Blog.js';
@@ -105,10 +107,8 @@ app.post('/api/upload-image', upload.single('image'), async (req, res) => {
 });
 
 // AdminJS Custom Component
-const componentLoader = new ComponentLoader()
-const imageUploadComponent = componentLoader.add('ImageUpload', path.join(__dirname, 'components', 'ImageUpload.jsx'))
-
-
+const componentLoader = new ComponentLoader();
+const imageUploadComponent = componentLoader.add('ImageUpload', path.join(__dirname, 'components', 'ImageUpload.jsx'));
 
 // AdminJS Setup
 const admin = new AdminJS({
@@ -133,8 +133,8 @@ const admin = new AdminJS({
           coverImage: {
             type: 'string',
             components: {
-              edit: '',
-              show: ''
+              edit: imageUploadComponent,
+              show: imageUploadComponent,
             },
             isVisible: {
               list: true,
@@ -186,7 +186,7 @@ const admin = new AdminJS({
       },
     },
   },
-  componentLoader, 
+  componentLoader,
   rootPath: '/admin',
   dashboard: {
     handler: async () => {
@@ -199,7 +199,7 @@ const admin = new AdminJS({
   },
 });
 
-// AdminJS Auth + Router
+// AdminJS Auth + Router with MongoDB session store
 const adminRouter = AdminJSExpress.buildAuthenticatedRouter(
   admin,
   {
@@ -215,6 +215,7 @@ const adminRouter = AdminJSExpress.buildAuthenticatedRouter(
   },
   null,
   {
+    store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
     resave: false,
     saveUninitialized: true,
     secret: process.env.COOKIE_SECRET || 'default-strong-secret-32-characters',
