@@ -1,4 +1,3 @@
-// server.js or index.js
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
@@ -9,7 +8,9 @@ import compression from 'compression';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
-import bodyParser from 'body-parser'; // 🧠 Add this
+import bodyParser from 'body-parser';
+import session from 'express-session';
+import MongoStore from 'connect-mongo';
 
 // Models
 import Blog from './models/Blog.js';
@@ -36,8 +37,6 @@ app.use(cors({
   credentials: true,
   exposedHeaders: ['Authorization'],
 }));
-
-// 🌐 Handle large form payloads
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 
