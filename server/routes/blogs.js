@@ -6,9 +6,17 @@ const router = express.Router();
 
 // Get all blogs (public)
 router.get('/', async (req, res) => {
-  const blogs = await Blog.find().sort({ createdAt: -1 });
-  res.json(blogs);
+  try {
+    const blogs = await Blog.find({}, 'title slug excerpt coverImage isPublished publishedAt createdAt')
+      .sort({ createdAt: -1 })
+      .limit(20); // optional: limits number of blogs returned
+    res.json(blogs);
+  } catch (error) {
+    console.error('Error fetching blogs:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
+
 
 // Get single blog (public)
 router.get('/view/:id', async (req, res) => {
