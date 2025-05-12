@@ -10,7 +10,7 @@ const Blogs = () => {
       <TopBar />
       <div className="container py-5">
         <header className="text-center mb-5">
-          <h3 className="display-6 fw-bold text-white">Today's Capture</h3>
+          <h3 className="display-6 fw-bold text-white">Exploper More</h3>
           <p className="lead text-secondary">Explore insights, strategies, and creative journeys.</p>
         </header>
 

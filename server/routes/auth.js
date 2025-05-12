@@ -1,92 +1,118 @@
 import express from 'express';
+import supabase from '../supabaseClient.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import Admin from '../models/Admin.js';
 
 const router = express.Router();
+const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_here';
 
-// Login Route
-router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
-
+// GET all admins
+router.get('/', async (req, res) => {
   try {
-    const admin = await Admin.findOne({ username }).select('+password');
-    if (!admin) {
-      return res.status(401).json({ 
-        success: false,
-        message: 'Invalid credentials' 
-      });
-    }
-
-    const isMatch = await bcrypt.compare(password, admin.password);
-    if (!isMatch) {
-      return res.status(401).json({ 
-        success: false,
-        message: 'Invalid credentials' 
-      });
-    }
-
-    const token = jwt.sign(
-      { id: admin._id, username: admin.username }, 
-      process.env.JWT_SECRET || 'fallback-secret-key', 
-      { expiresIn: '1d' }
-    );
-
-    res.cookie('adminjs', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 86400000 // 1 day
-    });
-
-    res.json({ 
-      success: true,
-      token,
-      user: {
-        id: admin._id,
-        username: admin.username
-      }
-    });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ 
-      success: false,
-      message: 'Internal server error' 
-    });
+    const { data: admins, error } = await supabase
+      .from('admins')
+      .select('id, username, email, role, created_at');
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(admins);
+  } catch (err) {
+    console.error('Error fetching admins:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Signup Route
-router.post('/signup', async (req, res) => {
-  const { username, password } = req.body;
+// REGISTER a new admin
+router.post('/register', async (req, res) => {
+  const { username, email, password, role } = req.body;
+
+  if (!username || !email || !password)
+    return res.status(400).json({ error: 'All fields are required' });
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const now = new Date().toISOString();
 
   try {
-    const existingUser = await Admin.findOne({ username });
-    if (existingUser) {
-      return res.status(400).json({ success: false, message: 'User already exists' });
-    }
+    const { data: newAdmin, error } = await supabase
+      .from('admins')
+      .insert([{ username, email, password: hashedPassword, role, created_at: now, updated_at: now }])
+      .select('id, username, email, role, created_at')
+      .single();
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newAdmin = await Admin.create({ username, password: hashedPassword });
+    if (error) return res.status(500).json({ error: error.message });
+    res.status(201).json(newAdmin);
+  } catch (err) {
+    console.error('Error registering admin:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
-    const token = jwt.sign(
-      { id: newAdmin._id, username: newAdmin.username },
-      process.env.JWT_SECRET || 'fallback-secret-key',
-      { expiresIn: '1d' }
-    );
+// LOGIN admin
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
 
-    res.json({
-      success: true,
-      token,
-      user: {
-        id: newAdmin._id,
-        username: newAdmin.username
-      }
-    });
+  const { data: admin, error } = await supabase
+    .from('admins')
+    .select('*')
+    .eq('email', email)
+    .single();
 
-  } catch (error) {
-    console.error('Signup error:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+  if (error || !admin) return res.status(401).json({ error: 'Invalid credentials' });
+
+  const isMatch = await bcrypt.compare(password, admin.password);
+  if (!isMatch) return res.status(401).json({ error: 'Invalid credentials' });
+
+  const token = jwt.sign(
+    { id: admin.id, email: admin.email, role: admin.role },
+    JWT_SECRET,
+    { expiresIn: '2h' }
+  );
+
+  res.json({ token });
+});
+
+// UPDATE admin
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const { username, email, password, role } = req.body;
+  const updated_at = new Date().toISOString();
+
+  const updates = { updated_at };
+  if (username) updates.username = username;
+  if (email) updates.email = email;
+  if (role) updates.role = role;
+  if (password) updates.password = await bcrypt.hash(password, 10);
+
+  try {
+    const { data: updatedAdmin, error } = await supabase
+      .from('admins')
+      .update(updates)
+      .eq('id', id)
+      .select('id, username, email, role, created_at, updated_at')
+      .single();
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(updatedAdmin);
+  } catch (err) {
+    console.error('Error updating admin:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE admin
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const { data: deletedAdmin, error } = await supabase
+      .from('admins')
+      .delete()
+      .eq('id', id)
+      .select('id, username, email')
+      .single();
+
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(deletedAdmin);
+  } catch (err) {
+    console.error('Error deleting admin:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

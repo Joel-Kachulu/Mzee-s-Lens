@@ -1,45 +1,163 @@
 import express from 'express';
-import Blog from '../models/Blog.js';
-import authMiddleware from '../middleware/auth.js';  // Add .js extension
+import supabase from '../supabaseClient.js';
+import multer from 'multer';
+import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
 
 const router = express.Router();
 
-// Get all blogs (public)
+// Set up multer for image uploads
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+function generateSlug(title) {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+// Upload image to Supabase Storage
+router.post('/upload', upload.single('file'), async (req, res) => {
+  const file = req.file;
+  if (!file) return res.status(400).json({ error: 'No file uploaded' });
+
+  const fileExt = path.extname(file.originalname);
+  const fileName = `${uuidv4()}${fileExt}`;
+  const filePath = `blogs/${fileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('blog-assets')
+    .upload(filePath, file.buffer, {
+      contentType: file.mimetype,
+    });
+
+  if (uploadError) {
+    console.error('Upload error:', uploadError);
+    return res.status(500).json({ error: uploadError.message });
+  }
+
+  const { data: publicUrlData } = supabase.storage
+    .from('blog-assets')
+    .getPublicUrl(filePath);
+
+  res.status(200).json({ url: publicUrlData.publicUrl });
+});
+
+// GET all blogs
 router.get('/', async (req, res) => {
   try {
-    const blogs = await Blog.find({}, 'title slug excerpt coverImage isPublished publishedAt createdAt')
-      .sort({ createdAt: -1 })
-      .limit(20); // optional: limits number of blogs returned
+    const { data: blogs, error } = await supabase
+      .from('blogs')
+      .select('*');
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
     res.json(blogs);
-  } catch (error) {
-    console.error('Error fetching blogs:', error);
-    res.status(500).json({ message: 'Server error' });
+  } catch (err) {
+    console.error('Error fetching blogs:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-
-// Get single blog (public)
-router.get('/view/:id', async (req, res) => {
-  const blog = await Blog.findById(req.params.id);
-  res.json(blog);
+// GET a single blog by ID
+router.get('/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const { data: blog, error } = await supabase
+      .from('blogs')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (error) {
+      return res.status(404).json({ error: 'Blog not found' });
+    }
+    res.json(blog);
+  } catch (err) {
+    console.error('Error fetching blog:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
-// Create blog (admin only)
-router.post('/create', authMiddleware, async (req, res) => {
-  const newBlog = new Blog(req.body);
-  await newBlog.save();
-  res.status(201).json(newBlog);
+// CREATE a new blog
+router.post('/', async (req, res) => {
+  const { title, content, imageUrl } = req.body;
+
+  if (!title || !content) {
+    return res.status(400).json({ error: 'Title and content are required.' });
+  }
+
+  const slug = generateSlug(title);
+  const createdat = new Date().toISOString();
+  const updatedat = createdat;
+
+  try {
+    const { data: newBlog, error } = await supabase
+      .from('blogs')
+      .insert([{ title, content, coverImage: imageUrl, slug, createdat, updatedat }])
+      .select()
+      .single();
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+    res.status(201).json(newBlog);
+  } catch (err) {
+    console.error('Error creating blog:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
-// Update blog (admin only)
-router.put('/update/:id', authMiddleware, async (req, res) => {
-  const updated = await Blog.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  res.json(updated);
+// UPDATE a blog by ID
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const { title, content, imageUrl } = req.body;
+
+  const updates = {
+    updatedat: new Date().toISOString()
+  };
+
+  if (title) {
+    updates.title = title;
+    updates.slug = generateSlug(title);
+  }
+  if (content) updates.content = content;
+  if (imageUrl) updates.coverImage = imageUrl;
+
+  try {
+    const { data: updatedBlog, error } = await supabase
+      .from('blogs')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+    res.json(updatedBlog);
+  } catch (err) {
+    console.error('Error updating blog:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
-router.delete('/delete/:id', authMiddleware, async (req, res) => {
-  await Blog.findByIdAndDelete(req.params.id);
-  res.json({ message: 'Deleted' });
+// DELETE a blog by ID
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const { data: deletedBlog, error } = await supabase
+      .from('blogs')
+      .delete()
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+    res.json(deletedBlog);
+  } catch (err) {
+    console.error('Error deleting blog:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 export default router;

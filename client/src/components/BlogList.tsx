@@ -1,117 +1,97 @@
 import React, { useEffect, useState } from 'react';
-import api from '../services/api';
+import { Card, Row, Col, Container, Spinner, Alert } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import api from '../services/api';
 
 interface Blog {
-  _id: string;
+  id: string;
   title: string;
-  content: string;
-  imageUrl?: string;
+  excerpt?: string;
+  coverImage?: string;
+  createdAt: string;
 }
+
+const truncateText = (text: string, wordLimit: number) => {
+  return text.split(' ').slice(0, wordLimit).join(' ') + '...';
+};
 
 const BlogList: React.FC = () => {
   const [blogs, setBlogs] = useState<Blog[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const response = await api.get('api/blogs');
-        setBlogs(response.data);
+        const response = await api.get('/api/blogs/');
+        const rawData = Array.isArray(response.data) ? response.data : response.data.blogs || [];
+
+        // Normalize field names
+        const normalizedBlogs = rawData.map((blog: any) => ({
+          id: blog.id,
+          title: blog.title,
+          excerpt: blog.excerpt || blog.content?.slice(0, 100),
+          coverImage: blog.coverImage || 'https://via.placeholder.com/600x400?text=No+Image',
+          createdAt: blog.createdat,
+        }));
+
+        setBlogs(normalizedBlogs);
       } catch (err) {
-        setError('Failed to fetch blogs. Please try again later.');
-        console.error('Error fetching blogs:', err);
+        setError('Failed to fetch blogs.');
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchBlogs();
   }, []);
 
-  const placeholderImage = 'https://via.placeholder.com/300x200?text=No+Image';
+  if (loading) {
+    return (
+      <Container className="text-center my-5">
+        <Spinner animation="border" variant="primary" />
+      </Container>
+    );
+  }
 
-  const extractFirstImage = (html: string): string | null => {
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    const img = div.querySelector('img');
-    return img ? img.src : null;
-  };
-
-  const SkeletonLoader = () => (
-    <div className="col-md-4 mb-4">
-      <div className="card h-100">
-        <div className="card-img-top placeholder" style={{ height: '200px' }}></div>
-        <div className="card-body">
-          <div className="placeholder-glow">
-            <h5 className="card-title placeholder col-8"></h5>
-            <p className="card-text placeholder col-12"></p>
-            <p className="card-text placeholder col-10"></p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  if (error) {
+    return (
+      <Container className="my-5">
+        <Alert variant="danger">{error}</Alert>
+      </Container>
+    );
+  }
 
   return (
-    <div className="container py-5">
-      {error && (
-        <div className="alert alert-danger" role="alert">
-          {error}
-        </div>
-      )}
-
-      <div className="row">
-        {loading ? (
-          <>
-            <SkeletonLoader />
-            <SkeletonLoader />
-            <SkeletonLoader />
-          </>
-        ) : (
-          blogs.length > 0 ? (
-            blogs.map(blog => {
-              const coverImage = blog.imageUrl || extractFirstImage(blog.content) || placeholderImage;
-              return (
-                <div className="col-md-4 mb-4" key={blog._id}>
-                  <div className="card h-100 shadow-sm">
-                    <img 
-                      src={coverImage} 
-                      className="card-img-top" 
-                      alt={blog.title}
-                      style={{ height: '200px', objectFit: 'cover' }}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = placeholderImage;
-                      }}
-                    />
-                    <div className="card-body d-flex flex-column">
-                      <h5 className="card-title">{blog.title}</h5>
-                      <div 
-                        className="card-text text-muted flex-grow-1" 
-                        dangerouslySetInnerHTML={{ __html: blog.content.substring(0, 100) + '...' }}
-                      />
-                      <Link 
-                        to={`/blog/${blog._id}`} 
-                        className="btn btn-outline-primary mt-auto align-self-start"
-                      >
-                        Read More
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          ) : (
-            <div className="col-12">
-              <div className="alert alert-info">
-                No blog posts available. Check back later!
-              </div>
-            </div>
-          )
-        )}
-      </div>
-    </div>
+    <Container className="my-5">
+      <Row xs={1} md={2} lg={3} className="g-4">
+        {blogs.map((blog) => (
+          <Col key={blog.id}>
+            <Card className="h-100 shadow-sm">
+              <Card.Img
+                variant="top"
+                src={blog.coverImage}
+                alt={blog.title}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'https://via.placeholder.com/600x400?text=No+Image';
+                }}
+                style={{ height: '200px', objectFit: 'cover' }}
+              />
+              <Card.Body>
+                <small className="text-muted d-block mb-2">
+                  {new Date(blog.createdAt).toLocaleDateString()}
+                </small>
+                <Card.Title>{blog.title}</Card.Title>
+                <Card.Text>{truncateText(blog.excerpt || 'No excerpt available.', 25)}</Card.Text>
+                <Link to={`/blogdetail/${blog.id}`} className="btn btn-primary btn-sm">
+                  Read More
+                </Link>
+              </Card.Body>
+            </Card>
+          </Col>
+        ))}
+      </Row>
+    </Container>
   );
 };
 

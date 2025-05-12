@@ -1,25 +1,28 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+// src/App.tsx
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+
 import Home from './components/Home';
 import BlogDetail from './components/BlogDetail';
 import BlogList from './components/BlogList';
 import Blogs from './pages/Blogs';
 import About from './pages/About';
-import LoadingSpinner from './components/LoadingSpinner'; // spinner
-import PageWrapper from './components/PageWrapper'; // fade animation wrapper
 
-const AppContent: React.FC = () => {
+import Dashboard from './admin/pages/Dashboard';
+import ManageBlogs from './admin/pages/ManageBlogs';
+import BlogForm from './admin/pages/BlogForm';
+
+import LoadingSpinner from './components/LoadingSpinner';
+import PageWrapper from './components/PageWrapper';
+
+const AppContent = () => {
   const location = useLocation();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setLoading(true);
-
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 500); // 0.5 second spinner on every page switch
-
+    const timer = setTimeout(() => setLoading(false), 500);
     return () => clearTimeout(timer);
   }, [location]);
 
@@ -27,30 +30,53 @@ const AppContent: React.FC = () => {
     <>
       {loading && <LoadingSpinner />}
       {!loading && (
-        <PageWrapper key={location.pathname}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/bloglist" element={<BlogList />} />
-            <Route path="/blog/:id" element={<BlogDetail />} />
-            <Route path="/blogs" element={<Blogs />} />
-            <Route path="/about" element={<About />} />
-            <Route path="*" element={<Home />} /> {/* Wildcard */}
-          </Routes>
-        </PageWrapper>
+        <Routes>
+          <Route path="/*" element={<MainAppLayout />} />
+          <Route path="/admin/*" element={<AdminRoutes />} />
+        </Routes>
       )}
     </>
   );
 };
 
-const App: React.FC = () => (
+// Public site layout
+const MainAppLayout = () => {
+  const location = useLocation();
+
+  return (
+    <PageWrapper key={location.pathname}>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/bloglist" element={<BlogList />} />
+        <Route path="/blogdetail/:id" element={<BlogDetail />} />
+        <Route path="/blogs" element={<Blogs />} />
+        <Route path="/about" element={<About />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </PageWrapper>
+  );
+};
+
+
+const AdminRoutes = () => {
+  return (
+    
+      <Routes>
+        <Route path="/admin" element={<Dashboard />} />
+        <Route path="/manageblogs" element={<ManageBlogs />} />
+        <Route path="/blogs/create" element={<BlogForm />} />
+        <Route path="/blogs/edit/:id" element={<BlogForm />} />
+        <Route path="*" element={<Navigate to="admin"  />} />
+      </Routes>
+      
+
+  );
+};
+
+const App = () => (
   <Router>
     <AppContent />
   </Router>
 );
 
 export default App;
-
-
-
-
-
