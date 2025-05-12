@@ -8,7 +8,7 @@ interface Blog {
   title: string;
   excerpt?: string;
   coverImage?: string;
-  createdAt: string;
+  createdat: string;
 }
 
 const truncateText = (text: string, wordLimit: number) => {
@@ -32,7 +32,7 @@ const BlogList: React.FC = () => {
           title: blog.title,
           excerpt: blog.excerpt || blog.content?.slice(0, 100),
           coverImage: blog.coverImage || 'https://via.placeholder.com/600x400?text=No+Image',
-          createdAt: blog.createdat,
+          createdat: blog.createdat,
         }));
 
         setBlogs(normalizedBlogs);
@@ -79,7 +79,7 @@ const BlogList: React.FC = () => {
               />
               <Card.Body>
                 <small className="text-muted d-block mb-2">
-                  {new Date(blog.createdAt).toLocaleDateString()}
+                  {new Date(blog.createdat).toLocaleDateString()}
                 </small>
                 <Card.Title>{blog.title}</Card.Title>
                 <Card.Text>{truncateText(blog.excerpt || 'No excerpt available.', 25)}</Card.Text>
