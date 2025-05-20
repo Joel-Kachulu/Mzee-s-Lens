@@ -24,11 +24,22 @@ const app = express();
 app.use(express.json());
 
 // Middleware
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://mzee-s-lens-2jdw.vercel.app'
+];
+
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(compression());
 app.use(cors({
-  origin: 'https://mzee-s-lens-2jdw.vercel.app/',
-  credentials: true,
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
 }));
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));

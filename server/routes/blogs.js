@@ -56,6 +56,7 @@ router.get('/', async (req, res) => {
     res.json(blogs);
   } catch (err) {
     console.error('Error fetching blogs:', err);
+    console.log('failed fetch')
     res.status(500).json({ error: 'Internal server error' });
   }
 });

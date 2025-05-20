@@ -1,10 +1,15 @@
 import axios from 'axios';
 
+const baseURL =
+  import.meta.env.VITE_BACKEND_URL || 'https://mzee-s-lens.onrender.com';
+
 const api = axios.create({
-  baseURL: 'https://mzee-s-lens.onrender.com', // Your backend server URL
+  baseURL,                  
   headers: {
     'Content-Type': 'application/json',
   },
+
+  withCredentials: true,
 });
 
 export default api;
