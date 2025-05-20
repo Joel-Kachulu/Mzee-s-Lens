@@ -6,12 +6,13 @@ import api from '../services/api';
 interface Blog {
   id: string;
   title: string;
-  excerpt?: string;
-  coverImage?: string;
+  excerpt?: string | null;
+  coverImage?: string | null;
   createdat: string;
 }
 
 const truncateText = (text: string, wordLimit: number) => {
+  if (!text) return 'No excerpt available.';
   return text.split(' ').slice(0, wordLimit).join(' ') + '...';
 };
 
@@ -26,12 +27,11 @@ const BlogList: React.FC = () => {
         const response = await api.get('/api/blogs/');
         const rawData = Array.isArray(response.data) ? response.data : response.data.blogs || [];
 
-        // Normalize field names
         const normalizedBlogs = rawData.map((blog: any) => ({
-          id: blog.id,
+          id: blog._id || blog.id,
           title: blog.title,
-          excerpt: blog.excerpt || blog.content?.slice(0, 100),
-          coverImage: blog.coverImage || 'https://via.placeholder.com/600x400?text=No+Image',
+          excerpt: blog.excerpt || blog.content?.slice(0, 80) || null,
+          coverImage: blog.coverImage || null,
           createdat: blog.createdat,
         }));
 
@@ -70,10 +70,11 @@ const BlogList: React.FC = () => {
             <Card className="h-100 shadow-sm">
               <Card.Img
                 variant="top"
-                src={blog.coverImage}
+                src={blog.coverImage || 'https://via.placeholder.com/600x400?text=No+Image'}
                 alt={blog.title}
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'https://via.placeholder.com/600x400?text=No+Image';
+                  (e.target as HTMLImageElement).src =
+                    'https://via.placeholder.com/600x400?text=Image+Error';
                 }}
                 style={{ height: '200px', objectFit: 'cover' }}
               />
@@ -82,7 +83,11 @@ const BlogList: React.FC = () => {
                   {new Date(blog.createdat).toLocaleDateString()}
                 </small>
                 <Card.Title>{blog.title}</Card.Title>
-                <Card.Text>{truncateText(blog.excerpt || 'No excerpt available.', 25)}</Card.Text>
+                <Card.Text
+                  dangerouslySetInnerHTML={{
+                    __html: truncateText(blog.excerpt || '', 25),
+                  }}
+                />
                 <Link to={`/blogdetail/${blog.id}`} className="btn btn-primary btn-sm">
                   Read More
                 </Link>

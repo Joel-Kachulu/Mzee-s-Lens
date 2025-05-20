@@ -81,13 +81,35 @@ router.get('/:id', async (req, res) => {
 });
 
 // CREATE a new blog
-router.post('/', async (req, res) => {
-  const { title, content, imageUrl } = req.body;
+router.post('/', upload.single('coverImage'), async (req, res) => {
+  const { title, content } = req.body;
+  const file = req.file;
 
-  if (!title || !content) {
-    return res.status(400).json({ error: 'Title and content are required.' });
+  if (!title || !content || !file) {
+    return res.status(400).json({ error: 'Title, content, and cover image are required.' });
   }
 
+  const fileExt = path.extname(file.originalname);
+  const fileName = `${uuidv4()}${fileExt}`;
+  const filePath = `blogs/${fileName}`;
+
+  // Upload image to Supabase
+  const { error: uploadError } = await supabase.storage
+    .from('blog-assets')
+    .upload(filePath, file.buffer, {
+      contentType: file.mimetype,
+    });
+
+  if (uploadError) {
+    console.error('Upload error:', uploadError);
+    return res.status(500).json({ error: 'Image upload failed.' });
+  }
+
+  const { data: publicUrlData } = supabase.storage
+    .from('blog-assets')
+    .getPublicUrl(filePath);
+
+  const imageUrl = publicUrlData.publicUrl;
   const slug = generateSlug(title);
   const createdat = new Date().toISOString();
   const updatedat = createdat;
@@ -108,10 +130,12 @@ router.post('/', async (req, res) => {
   }
 });
 
+
 // UPDATE a blog by ID
-router.put('/:id', async (req, res) => {
+router.put('/:id', upload.single('coverImage'), async (req, res) => {
   const { id } = req.params;
-  const { title, content, imageUrl } = req.body;
+  const { title, content } = req.body;
+  const file = req.file;
 
   const updates = {
     updatedat: new Date().toISOString()
@@ -122,7 +146,30 @@ router.put('/:id', async (req, res) => {
     updates.slug = generateSlug(title);
   }
   if (content) updates.content = content;
-  if (imageUrl) updates.coverImage = imageUrl;
+
+  // If a new image is provided
+  if (file) {
+    const fileExt = path.extname(file.originalname);
+    const fileName = `${uuidv4()}${fileExt}`;
+    const filePath = `blogs/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('blog-assets')
+      .upload(filePath, file.buffer, {
+        contentType: file.mimetype,
+      });
+
+    if (uploadError) {
+      console.error('Upload error:', uploadError);
+      return res.status(500).json({ error: 'Image upload failed.' });
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from('blog-assets')
+      .getPublicUrl(filePath);
+
+    updates.coverImage = publicUrlData.publicUrl;
+  }
 
   try {
     const { data: updatedBlog, error } = await supabase
@@ -140,6 +187,7 @@ router.put('/:id', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 // DELETE a blog by ID
 router.delete('/:id', async (req, res) => {

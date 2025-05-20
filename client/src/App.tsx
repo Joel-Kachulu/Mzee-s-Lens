@@ -12,6 +12,7 @@ import About from './pages/About';
 import Dashboard from './admin/pages/Dashboard';
 import ManageBlogs from './admin/pages/ManageBlogs';
 import BlogForm from './admin/pages/BlogForm';
+import Login from './admin/pages/Login';
 
 import LoadingSpinner from './components/LoadingSpinner';
 import PageWrapper from './components/PageWrapper';
@@ -61,15 +62,15 @@ const MainAppLayout = () => {
 const AdminRoutes = () => {
   return (
     
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/manageblogs" element={<ManageBlogs />} />
-        <Route path="/blogs/create" element={<BlogForm />} />
-        <Route path="/blogs/edit/:id" element={<BlogForm />} />
-        <Route path="*" element={<Navigate to="admin"  />} />
-      </Routes>
-      
-
+     <Routes>
+       <Route path="/" element={<Login />} />
+       <Route path="login" element={<Login />} />
+       <Route path="dashboard" element={<Dashboard />} />
+       <Route path="manageblogs" element={<ManageBlogs />} />
+       <Route path="blogs/create" element={<BlogForm />} />
+       <Route path="blogs/edit/:id" element={<BlogForm />} />
+       <Route path="*" element={<Navigate to="dashboard" />} />
+     </Routes>
   );
 };
 

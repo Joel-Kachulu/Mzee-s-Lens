@@ -45,17 +45,7 @@ const BlogDetail: React.FC = () => {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
-  const extractFirstImage = (html: string): string | null => {
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    const img = div.querySelector('img');
-    return img?.src || null;
-  };
-
-  const placeholderImage = 'https://via.placeholder.com/800x400?text=No+Image+Available';
-  const coverImage =
-    blog?.imageUrl || (blog?.content ? extractFirstImage(blog.content) : null) || placeholderImage;
-
+ 
   if (loading) {
     return (
       <div className="dark-theme">
@@ -90,18 +80,6 @@ const BlogDetail: React.FC = () => {
       <div className="container-fluid px-15vw">
         <div className="bg-white min-vh-100 py-5">
           <article className="blog-post px-4">
-            <div className="mb-4">
-              <img
-                src={coverImage}
-                alt={`Cover image for ${blog.title}`}
-                className="img-fluid rounded-0 w-100"
-                style={{ maxHeight: '60vh', objectFit: 'cover' }}
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = placeholderImage;
-                }}
-              />
-            </div>
-
             <header className="mb-4 px-3">
               <h1 className="fw-bold mb-3 text-dark display-4">{blog.title || 'Untitled Blog'}</h1>
               <div className="d-flex align-items-center text-muted mb-3">
