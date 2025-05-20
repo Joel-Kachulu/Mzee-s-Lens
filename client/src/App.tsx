@@ -62,7 +62,7 @@ const AdminRoutes = () => {
   return (
     
       <Routes>
-        <Route path="/admin" element={<Dashboard />} />
+        <Route path="/" element={<Dashboard />} />
         <Route path="/manageblogs" element={<ManageBlogs />} />
         <Route path="/blogs/create" element={<BlogForm />} />
         <Route path="/blogs/edit/:id" element={<BlogForm />} />
