@@ -110,6 +110,7 @@ router.post('/', upload.single('coverImage'), async (req, res) => {
     .getPublicUrl(filePath);
 
   const imageUrl = publicUrlData.publicUrl;
+  console.log(publicUrlData.publicUrl);
   const slug = generateSlug(title);
   const createdat = new Date().toISOString();
   const updatedat = createdat;

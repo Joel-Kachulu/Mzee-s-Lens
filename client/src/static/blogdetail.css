@@ -1,24 +1,94 @@
-/* Custom 15% viewport width padding */
+/* Responsive container padding */
 .px-15vw {
-    padding-left: 15vw;
-    padding-right: 15vw;
-  }
-  
-  @media (max-width: 992px) {
-    .px-15vw {
-      padding-left: 5vw;
-      padding-right: 5vw;
-    }
-  }
-  
-  /* Full-width content styling */
-  .blog-post {
-    max-width: 100%;
-  }
-  
-  /* Image styling */
-  .img-fluid.rounded-0 {
-    border-radius: 0 !important;
-  }
+  padding-left: 15vw;
+  padding-right: 15vw;
+}
 
-  
+@media (max-width: 992px) {
+  .px-15vw {
+    padding-left: 5vw;
+    padding-right: 5vw;
+  }
+}
+
+/* Blog container styling */
+.blog-post {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  padding: 3rem 2rem;
+  transition: all 0.3s ease-in-out;
+}
+
+@media (max-width: 768px) {
+  .blog-post {
+    padding: 2rem 1rem;
+  }
+}
+
+/* Title styling */
+.blog-post h1 {
+  font-size: 2.5rem;
+  line-height: 1.3;
+  font-weight: 700;
+  color: #212529;
+}
+
+/* Meta info styling */
+.blog-post header .text-muted {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #6c757d !important;
+}
+
+/* Blog content */
+.blog-content {
+  margin-top: 2rem;
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: #333;
+}
+
+.blog-content p {
+  margin-bottom: 1.5rem;
+}
+
+.blog-content h2,
+.blog-content h3,
+.blog-content h4 {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: #111;
+}
+
+.blog-content img {
+  max-width: 100%;
+  height: auto;
+  margin: 1.5rem 0;
+  border-radius: 8px;
+}
+
+/* Back button footer */
+.blog-post footer {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid #dee2e6;
+}
+
+.blog-post footer .btn {
+  border-radius: 50px;
+  padding: 0.5rem 1.5rem;
+  font-weight: 500;
+  transition: 0.2s ease-in-out;
+}
+
+.blog-post footer .btn:hover {
+  background-color: #212529;
+  color: #fff;
+}
+
+/* Spinner center utility */
+.min-vh-100.d-flex.justify-content-center.align-items-center {
+  background-color: #f8f9fa;
+}

@@ -23,24 +23,29 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(express.json());
 
-// Middleware
-const allowedOrigins = [
-  'http://localhost:5173',
-  'https://mzee-s-lens-2jdw.vercel.app'
-];
 
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(compression());
+// Replace your current CORS middleware with this:
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
+  origin: [
+    'http://localhost:5173',
+    'https://mzee-s-lens-2jdw.vercel.app'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  exposedHeaders: ['Content-Disposition']
 }));
+
+// Add this after CORS middleware
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+});
+
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 
